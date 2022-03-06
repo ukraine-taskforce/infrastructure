@@ -1,5 +1,14 @@
 variable "region" {
-  description = "Region to deploy to"
-  type        = string
-  default     = "eu-central-1"
+  description = "Region"
+  type = string
+}
+
+variable "env_name" {
+  description = "Environment name"
+  type = string
+}
+
+variable "domain_name" {
+  description = "Domain name"
+  type = string
 }
