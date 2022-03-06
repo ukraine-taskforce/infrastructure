@@ -1,10 +1,5 @@
-variable "name" {
+variable "region" {
+  description = "Region to deploy to"
   type        = string
-  description = "S3 bucket name"
-}
-
-variable "acl {
-  type        = string
-  default     = "private"
-  description = "S3 bucket ACL"
+  default     = "eu-central-1"
 }

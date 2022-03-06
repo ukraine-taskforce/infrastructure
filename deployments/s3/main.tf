@@ -1,5 +1,6 @@
-module "mybucket" {
+module "s3" {
   source = "../../modules/s3"
 
-  name = "mybucket"
+  region = "eu-central-1"
 }
+
