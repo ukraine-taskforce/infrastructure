@@ -2,6 +2,10 @@ provider "aws" {
   region = var.region
 }
 
+locals {
+  env_domain_name = var.production ? var.domain_name : join(".", ["dev", var.domain_name])
+}
+
 # VPC
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
@@ -22,11 +26,11 @@ module "vpc" {
 module "acm" {
   source = "terraform-aws-modules/acm/aws"
 
-  domain_name = var.domain_name
+  domain_name = local.env_domain_name
   zone_id     = data.cloudflare_zone.this.id
 
   subject_alternative_names = [
-    "*.${var.domain_name}",
+    "*.${local.env_domain_name}",
   ]
 
   create_route53_records  = false
