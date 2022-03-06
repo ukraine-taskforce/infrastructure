@@ -41,7 +41,7 @@ resource "cloudflare_record" "validation" {
   type    = element(module.acm.validation_domains, count.index)["resource_record_type"]
   value   = replace(element(module.acm.validation_domains, count.index)["resource_record_value"], "/.$/", "")
   ttl     = 60
-  proxied = true
+  proxied = false
 
   allow_overwrite = true
 }
