@@ -491,7 +491,7 @@ resource "aws_iam_role_policy_attachment" "read_request_lambda_policy_attachment
 
 ### Backend S3
 resource "aws_s3_bucket" "ugt_lambda_states" {
-  bucket = "ugt-lambda-states"
+  bucket = join("-", [var.env_name, var.region, "lambda-states"])
 
   force_destroy = true
 }
