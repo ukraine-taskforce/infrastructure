@@ -533,3 +533,9 @@ resource "cloudflare_record" "backend" {
 
   allow_overwrite = true
 }
+
+resource "aws_apigatewayv2_api_mapping" "live" {
+  api_id      = aws_apigatewayv2_api.ugt_gw.id
+  domain_name = aws_apigatewayv2_domain_name.backend.id
+  stage       = aws_apigatewayv2_stage.ugt_gw_stage.id
+}
