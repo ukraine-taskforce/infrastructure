@@ -527,7 +527,7 @@ resource "cloudflare_record" "backend" {
   zone_id = data.cloudflare_zone.this.id
   name    = var.production ? "api" : "api.dev"
   type    = "CNAME"
-  value   = aws_apigatewayv2_domain_name.backend.domain_name_configuration.target_domain_name
+  value   = aws_apigatewayv2_domain_name.backend.domain_name_configuration[0].target_domain_name
   ttl     = 1
   proxied = true
 
