@@ -53,3 +53,16 @@ resource "cloudflare_record" "validation" {
 data "cloudflare_zone" "this" {
   name = var.domain_name
 }
+
+# S3 Bucket
+module "s3_bucket" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+
+  bucket = locals.env_domain_name
+  acl    = "public-read"
+
+  website = {
+    index_document = "index.html"
+  }
+
+}
