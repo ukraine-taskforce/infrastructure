@@ -107,18 +107,7 @@ POLICY
 
   website = {
     index_document = "index.html"
-    error_document = "error.html"
-    routing_rules = jsonencode([{
-      Condition : {
-        KeyPrefixEquals : "api/"
-      },
-      Redirect : {
-        Protocol : "https"
-        HostName : local.api_domain_name
-        HttpRedirectCode : "307"
-        ReplaceKeyPrefixWith: "live/api/"
-      }
-    }])
+    error_document = "index.html"
   }
 
 }
