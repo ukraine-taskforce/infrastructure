@@ -3,8 +3,8 @@ provider "aws" {
 }
 
 locals {
-  env_domain_name = var.production ? var.domain_name : join(".", ["dev", var.domain_name])
-  env_api_domain_name = join(".", [var.production ? "api" : "api-dev", var.domain_name])
+  fe_domain_name = join(".", [var.fe_subdomain, var.domain_name])
+  api_domain_name = join(".", [var.api_subdomain, var.domain_name])
 }
 
 ### VPC
@@ -27,11 +27,11 @@ module "vpc" {
 module "acm" {
   source = "terraform-aws-modules/acm/aws"
 
-  domain_name = local.env_domain_name
+  domain_name = local.fe_domain_name
   zone_id     = data.cloudflare_zone.this.id
 
   subject_alternative_names = [
-    local.env_api_domain_name
+    local.api_domain_name
   ]
 
   create_route53_records  = false
@@ -59,7 +59,7 @@ data "cloudflare_zone" "this" {
 module "frontend" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
-  bucket        = local.env_domain_name
+  bucket        = local.fe_domain_name
   acl           = "private"
   attach_policy = true
   policy        = <<POLICY
@@ -71,7 +71,7 @@ module "frontend" {
             "Effect": "Allow",
             "Principal": "*",
             "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::${local.env_domain_name}/*",
+            "Resource": "arn:aws:s3:::${local.fe_domain_name}/*",
             "Condition": {
                 "IpAddress": {
                     "aws:SourceIp": [
@@ -114,7 +114,7 @@ POLICY
       },
       Redirect : {
         Protocol : "https"
-        HostName : local.env_api_domain_name
+        HostName : local.api_domain_name
         HttpRedirectCode : "307"
         ReplaceKeyPrefixWith: "live/api/"
       }
@@ -516,7 +516,7 @@ resource "aws_sqs_queue" "requests-queue" {
 
 ### Backend Domain
 resource "aws_apigatewayv2_domain_name" "backend" {
-  domain_name = local.env_api_domain_name
+  domain_name = local.api_domain_name
 
   domain_name_configuration {
     certificate_arn = module.acm.acm_certificate_arn
@@ -527,7 +527,7 @@ resource "aws_apigatewayv2_domain_name" "backend" {
 
 resource "cloudflare_record" "backend" {
   zone_id = data.cloudflare_zone.this.id
-  name    = var.production ? "api" : "api-dev"
+  name    = var.api_subdomain
   type    = "CNAME"
   value   = aws_apigatewayv2_domain_name.backend.domain_name_configuration[0].target_domain_name
   ttl     = 1

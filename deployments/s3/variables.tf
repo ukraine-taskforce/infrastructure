@@ -9,7 +9,17 @@ variable "env_name" {
 }
 
 variable "domain_name" {
-  description = "Domain name"
+  description = "Root Domain name"
+  type = string
+}
+
+variable "api_subdomain" {
+  description = "API Subdomain"
+  type = string
+}
+
+variable "fe_subdomain" {
+  description = "Frontend Subdomain"
   type = string
 }
 
