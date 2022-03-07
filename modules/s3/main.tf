@@ -58,10 +58,10 @@ data "cloudflare_zone" "this" {
 module "frontend" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
-  bucket = local.env_domain_name
-  acl    = "private"
+  bucket        = local.env_domain_name
+  acl           = "private"
   attach_policy = true
-  policy = <<POLICY
+  policy        = <<POLICY
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -112,8 +112,8 @@ POLICY
         KeyPrefixEquals : "api/"
       },
       Redirect : {
-        Protocol: "https"
-        HostName: join(".", ["api", local.env_domain_name])
+        Protocol : "https"
+        HostName : join(".", ["api", local.env_domain_name])
         HttpRedirectCode : "307"
       }
     }])
@@ -158,7 +158,7 @@ resource "aws_apigatewayv2_stage" "ugt_gw_stage" {
       status                  = "$context.status"
       responseLength          = "$context.responseLength"
       integrationErrorMessage = "$context.integrationErrorMessage"
-    }
+      }
     )
   }
 }
@@ -326,7 +326,7 @@ resource "aws_lambda_function" "processor" {
 
   environment {
     variables = {
-      sqs_url = aws_sqs_queue.requests-queue.url
+      sqs_url    = aws_sqs_queue.requests-queue.url
       table_name = aws_dynamodb_table.requests.name
     }
   }
@@ -348,9 +348,9 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 
 ### Backend DyamoDB
 resource "aws_dynamodb_table" "requests" {
-  name           = join("-", [var.env_name, var.region, "dynamodb-requests"])
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "id"
+  name         = join("-", [var.env_name, var.region, "dynamodb-requests"])
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
 
   attribute {
     name = "id"
@@ -371,7 +371,7 @@ resource "aws_iam_role" "requests_lambda_role" {
       Principal = {
         Service = "lambda.amazonaws.com"
       }
-    }
+      }
     ]
   })
 }
@@ -412,7 +412,7 @@ EOF
 }
 
 resource "aws_iam_role" "post_request_lambda_role" {
-  name = "post_request_lambda_role"
+  name               = "post_request_lambda_role"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -430,7 +430,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "requests_lambda_policy_attachment" {
-  role = aws_iam_role.post_request_lambda_role.id
+  role       = aws_iam_role.post_request_lambda_role.id
   policy_arn = aws_iam_policy.post_request_lambda_policy.arn
 }
 
@@ -473,7 +473,7 @@ EOF
 }
 
 resource "aws_iam_role" "read_request_lambda_role" {
-  name = "read_request_lambda_role"
+  name               = "read_request_lambda_role"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -491,7 +491,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "read_request_lambda_policy_attachment" {
-  role = aws_iam_role.read_request_lambda_role.id
+  role       = aws_iam_role.read_request_lambda_role.id
   policy_arn = aws_iam_policy.read_request_lambda_policy.arn
 }
 
@@ -505,9 +505,9 @@ resource "aws_s3_bucket" "ugt_lambda_states" {
 ### Backend SQS
 
 resource "aws_sqs_queue" "requests-queue" {
-  name = join("-", [var.env_name, var.region, "sqs-requests-queue"])
-  delay_seconds = 90
-  max_message_size = 2048
+  name                      = join("-", [var.env_name, var.region, "sqs-requests-queue"])
+  delay_seconds             = 90
+  max_message_size          = 2048
   message_retention_seconds = 86400
   receive_wait_time_seconds = 10
 }
@@ -535,7 +535,8 @@ resource "cloudflare_record" "backend" {
 }
 
 resource "aws_apigatewayv2_api_mapping" "live" {
-  api_id      = aws_apigatewayv2_api.ugt_gw.id
-  domain_name = aws_apigatewayv2_domain_name.backend.id
-  stage       = aws_apigatewayv2_stage.ugt_gw_stage.id
+  api_id          = aws_apigatewayv2_api.ugt_gw.id
+  domain_name     = aws_apigatewayv2_domain_name.backend.id
+  stage           = aws_apigatewayv2_stage.ugt_gw_stage.id
+  api_mapping_key = aws_apigatewayv2_stage.ugt_gw_stage.name
 }
