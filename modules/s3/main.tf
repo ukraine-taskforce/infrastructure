@@ -4,6 +4,7 @@ provider "aws" {
 
 locals {
   env_domain_name = var.production ? var.domain_name : join(".", ["dev", var.domain_name])
+  env_api_domain_name = join(".", [var.production ? "api" : "api-dev", var.domain_name])
 }
 
 ### VPC
@@ -30,7 +31,7 @@ module "acm" {
   zone_id     = data.cloudflare_zone.this.id
 
   subject_alternative_names = [
-    "*.${local.env_domain_name}",
+    local.env_api_domain_name
   ]
 
   create_route53_records  = false
@@ -113,7 +114,7 @@ POLICY
       },
       Redirect : {
         Protocol : "https"
-        HostName : join(".", ["api", local.env_domain_name])
+        HostName : local.env_api_domain_name
         HttpRedirectCode : "307"
       }
     }])
@@ -514,7 +515,7 @@ resource "aws_sqs_queue" "requests-queue" {
 
 ### Backend Domain
 resource "aws_apigatewayv2_domain_name" "backend" {
-  domain_name = join(".", ["api", local.env_domain_name])
+  domain_name = local.env_api_domain_name
 
   domain_name_configuration {
     certificate_arn = module.acm.acm_certificate_arn
@@ -525,7 +526,7 @@ resource "aws_apigatewayv2_domain_name" "backend" {
 
 resource "cloudflare_record" "backend" {
   zone_id = data.cloudflare_zone.this.id
-  name    = var.production ? "api" : "api.dev"
+  name    = var.production ? "api" : "api-dev"
   type    = "CNAME"
   value   = aws_apigatewayv2_domain_name.backend.domain_name_configuration[0].target_domain_name
   ttl     = 1
