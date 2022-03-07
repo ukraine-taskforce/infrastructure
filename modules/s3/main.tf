@@ -54,8 +54,8 @@ data "cloudflare_zone" "this" {
   name = var.domain_name
 }
 
-# S3 Bucket
-module "s3_bucket" {
+# Frontend S3 Bucket
+module "frontend" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
   bucket = local.env_domain_name
@@ -70,7 +70,7 @@ module "s3_bucket" {
             "Effect": "Allow",
             "Principal": "*",
             "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::${local.domain_name}/*",
+            "Resource": "arn:aws:s3:::${local.env_domain_name}/*",
             "Condition": {
                 "IpAddress": {
                     "aws:SourceIp": [
@@ -114,7 +114,7 @@ resource "cloudflare_record" "frontend" {
   zone_id = data.cloudflare_zone.this.id
   name    = var.production ? "@" : "dev"
   type    = "CNAME"
-  value   = module.s3.s3_bucket_website_endpoint
+  value   = module.frontend.s3_bucket_website_endpoint
   ttl     = 1
   proxied = true
 
