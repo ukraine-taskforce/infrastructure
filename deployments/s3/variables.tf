@@ -23,11 +23,6 @@ variable "fe_subdomain" {
   type = string
 }
 
-variable "production" { 
-  description = "Specifies whether this is a production deployment"
-  type = bool
-}
-
 variable "lambda_locations_key" { 
   description = "S3 Object key for Locations lambda"
   type = string

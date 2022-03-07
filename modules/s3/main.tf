@@ -125,7 +125,7 @@ POLICY
 
 resource "cloudflare_record" "frontend" {
   zone_id = data.cloudflare_zone.this.id
-  name    = var.production ? "@" : "dev"
+  name    = var.fe_subdomain
   type    = "CNAME"
   value   = module.frontend.s3_bucket_website_endpoint
   ttl     = 1
