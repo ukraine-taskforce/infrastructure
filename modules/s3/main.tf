@@ -59,7 +59,7 @@ module "frontend" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
   bucket = local.env_domain_name
-  acl    = "public-read"
+  acl    = "private"
   attach_policy = true
   policy = <<POLICY
 {
@@ -106,6 +106,17 @@ POLICY
 
   website = {
     index_document = "index.html"
+    error_document = "error.html"
+    routing_rules = jsonencode([{
+      Condition : {
+        KeyPrefixEquals : "api/"
+      },
+      Redirect : {
+        Protocol: "https"
+        HostName: join(".", ["api", local.env_domain_name])
+        HttpRedirectCode : "307"
+      }
+    }])
   }
 
 }
@@ -504,4 +515,15 @@ resource "aws_sqs_queue" "requests-queue" {
   max_message_size = 2048
   message_retention_seconds = 86400
   receive_wait_time_seconds = 10
+}
+
+### Backend Domain
+resource "aws_apigatewayv2_domain_name" "backend" {
+  domain_name = join(".", ["api", local.env_domain_name])
+
+  domain_name_configuration {
+    certificate_arn = module.acm.arn
+    endpoint_type   = "REGIONAL"
+    security_policy = "TLS_1_2"
+  }
 }
