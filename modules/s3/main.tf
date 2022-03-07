@@ -337,7 +337,7 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 
 ### Backend DyamoDB
 resource "aws_dynamodb_table" "requests" {
-  name           = "Requests"
+  name           = join("-", [var.env_name, var.region, "dynamodb-requests"])
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "id"
 
