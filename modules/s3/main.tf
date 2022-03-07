@@ -116,6 +116,7 @@ POLICY
         Protocol : "https"
         HostName : local.env_api_domain_name
         HttpRedirectCode : "307"
+        ReplaceKeyPrefixWith: "live/api/"
       }
     }])
   }
