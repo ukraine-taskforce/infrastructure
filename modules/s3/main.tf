@@ -58,7 +58,7 @@ data "cloudflare_zone" "this" {
 module "s3_bucket" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
-  bucket = locals.env_domain_name
+  bucket = local.env_domain_name
   acl    = "public-read"
 
   website = {
