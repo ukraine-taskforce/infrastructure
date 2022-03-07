@@ -522,7 +522,7 @@ resource "aws_apigatewayv2_domain_name" "backend" {
   domain_name = join(".", ["api", local.env_domain_name])
 
   domain_name_configuration {
-    certificate_arn = module.acm.arn
+    certificate_arn = module.acm.acm_certificate_arn
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }
