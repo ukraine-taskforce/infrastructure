@@ -138,6 +138,11 @@ resource "cloudflare_record" "frontend" {
 resource "aws_apigatewayv2_api" "ugt_gw" {
   name          = join("-", [var.env_name, var.region, "api-gateway"])
   protocol_type = "HTTP"
+  cors_configuration {
+    "allow_origins" = [local.env_domain_name],
+    "allow_methods" = ["POST", "GET"],
+    "max_age"       = 300
+  }
 }
 
 resource "aws_apigatewayv2_stage" "ugt_gw_stage" {
