@@ -6,7 +6,7 @@ locals {
   env_domain_name = var.production ? var.domain_name : join(".", ["dev", var.domain_name])
 }
 
-# VPC
+### VPC
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -22,7 +22,7 @@ module "vpc" {
   enable_nat_gateway = true
 }
 
-# ACM 
+### ACM 
 module "acm" {
   source = "terraform-aws-modules/acm/aws"
 
@@ -54,7 +54,7 @@ data "cloudflare_zone" "this" {
   name = var.domain_name
 }
 
-# Frontend S3 Bucket
+### Frontend S3 Bucket
 module "frontend" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
@@ -119,4 +119,389 @@ resource "cloudflare_record" "frontend" {
   proxied = true
 
   allow_overwrite = true
+}
+
+### Backend API Gateway
+resource "aws_apigatewayv2_api" "ugt_gw" {
+  name          = join("-", [var.env_name, var.region, "api-gateway"])
+  protocol_type = "HTTP"
+}
+
+resource "aws_apigatewayv2_stage" "ugt_gw_stage" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  name        = "live"
+  auto_deploy = true
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.ugt_api_gw.arn
+
+    format = jsonencode({
+      requestId               = "$context.requestId"
+      sourceIp                = "$context.identity.sourceIp"
+      requestTime             = "$context.requestTime"
+      protocol                = "$context.protocol"
+      httpMethod              = "$context.httpMethod"
+      resourcePath            = "$context.resourcePath"
+      routeKey                = "$context.routeKey"
+      status                  = "$context.status"
+      responseLength          = "$context.responseLength"
+      integrationErrorMessage = "$context.integrationErrorMessage"
+    }
+    )
+  }
+}
+
+resource "aws_cloudwatch_log_group" "ugt_api_gw" {
+  name = "/aws/ugt_api_gw/${aws_apigatewayv2_api.ugt_gw.name}"
+
+  retention_in_days = 30
+}
+
+//Locations API
+resource "aws_lambda_permission" "locations" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.locations.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_apigatewayv2_api.ugt_gw.execution_arn}/*/*"
+}
+
+resource "aws_apigatewayv2_integration" "get_locations" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  integration_uri    = aws_lambda_function.locations.invoke_arn
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+}
+
+resource "aws_apigatewayv2_route" "get_locations" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  route_key = "GET /api/v1/requests/locations"
+  target    = "integrations/${aws_apigatewayv2_integration.get_locations.id}"
+}
+
+//Supplies API
+resource "aws_lambda_permission" "supplies" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.supplies.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_apigatewayv2_api.ugt_gw.execution_arn}/*/*"
+}
+
+resource "aws_apigatewayv2_integration" "get_supplies" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  integration_uri    = aws_lambda_function.supplies.invoke_arn
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+}
+
+resource "aws_apigatewayv2_route" "get_supplies" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  route_key = "GET /api/v1/requests/supplies"
+  target    = "integrations/${aws_apigatewayv2_integration.get_supplies.id}"
+}
+
+//Requests API
+resource "aws_lambda_permission" "requests" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.requests.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_apigatewayv2_api.ugt_gw.execution_arn}/*/*"
+}
+
+resource "aws_apigatewayv2_integration" "post_request" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  integration_uri    = aws_lambda_function.requests.invoke_arn
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+}
+
+resource "aws_apigatewayv2_route" "post_request" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  route_key = "POST /api/v1/requests"
+  target    = "integrations/${aws_apigatewayv2_integration.post_request.id}"
+}
+
+### Backend Lambda
+//Locations API
+resource "aws_lambda_function" "locations" {
+  function_name = "GetLocations"
+
+  s3_bucket = aws_s3_bucket.ugt_lambda_states.id
+  s3_key    = var.lambda_locations_key
+
+  runtime = "nodejs12.x"
+  handler = "locations.handler"
+
+  role = aws_iam_role.requests_lambda_role.arn
+}
+
+resource "aws_cloudwatch_log_group" "locations" {
+  name = "/aws/lambda/${aws_lambda_function.locations.function_name}"
+
+  retention_in_days = 30
+}
+
+//Supplies API
+resource "aws_lambda_function" "supplies" {
+  function_name = "GetSupplies"
+
+  s3_bucket = aws_s3_bucket.ugt_lambda_states.id
+  s3_key    = var.lambda_supplies_key
+
+  runtime = "nodejs12.x"
+  handler = "supplies.handler"
+
+  role = aws_iam_role.requests_lambda_role.arn
+}
+
+resource "aws_cloudwatch_log_group" "supplies" {
+  name = "/aws/lambda/${aws_lambda_function.supplies.function_name}"
+
+  retention_in_days = 30
+}
+
+//Requests API
+resource "aws_lambda_function" "requests" {
+  function_name = "PostRequest"
+
+  s3_bucket = aws_s3_bucket.ugt_lambda_states.id
+  s3_key    = var.lambda_requests_key
+
+  runtime = "nodejs12.x"
+  handler = "requests.handler"
+
+  role = aws_iam_role.post_request_lambda_role.arn
+
+  timeout = 30
+
+  environment {
+    variables = {
+      sqs_url = aws_sqs_queue.requests-queue.url
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "requests" {
+  name = "/aws/lambda/${aws_lambda_function.requests.function_name}"
+
+  retention_in_days = 30
+}
+
+//SQS listener
+resource "aws_lambda_function" "processor" {
+  function_name = "SaveRequest"
+
+  s3_bucket = aws_s3_bucket.ugt_lambda_states.id
+  s3_key    = var.lambda_processor_key
+
+  runtime = "nodejs12.x"
+  handler = "processor.handler"
+
+  role = aws_iam_role.read_request_lambda_role.arn
+
+  timeout = 30
+
+  environment {
+    variables = {
+      sqs_url = aws_sqs_queue.requests-queue.url
+      table_name = aws_dynamodb_table.requests.name
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "listener" {
+  name = "/aws/lambda/${aws_lambda_function.processor.function_name}"
+
+  retention_in_days = 30
+}
+
+# Event source from SQS
+resource "aws_lambda_event_source_mapping" "event_source_mapping" {
+  event_source_arn = aws_sqs_queue.requests-queue.arn
+  enabled          = true
+  function_name    = aws_lambda_function.processor.arn
+  batch_size       = 1
+}
+
+### Backend DyamoDB
+resource "aws_dynamodb_table" "requests" {
+  name           = "Requests"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  ttl {
+    attribute_name = "TimeToExist"
+    enabled        = false
+  }
+}
+
+### Backend IAM
+resource "aws_iam_role" "requests_lambda_role" {
+  name = "requests_lambda_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Sid    = ""
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "requests_lambda_policy" {
+  role       = aws_iam_role.requests_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_policy" "post_request_lambda_policy" {
+  name        = "post_request_lambda_policy"
+  description = "post_request_lambda_policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes"
+      ],
+      "Effect": "Allow",
+      "Resource": "${aws_sqs_queue.requests-queue.arn}"
+    },
+    {
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "post_request_lambda_role" {
+  name = "post_request_lambda_role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "requests_lambda_policy_attachment" {
+  role = aws_iam_role.post_request_lambda_role.id
+  policy_arn = aws_iam_policy.post_request_lambda_policy.arn
+}
+
+resource "aws_iam_policy" "read_request_lambda_policy" {
+  name        = "read_request_lambda_policy"
+  description = "read_request_lambda_policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ],
+      "Effect": "Allow",
+      "Resource": "${aws_sqs_queue.requests-queue.arn}"
+    },
+    {
+      "Action": [
+        "dynamodb:PutItem"
+      ],
+      "Effect": "Allow",
+      "Resource": "${aws_dynamodb_table.requests.arn}"
+    },
+    {
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "read_request_lambda_role" {
+  name = "read_request_lambda_role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "read_request_lambda_policy_attachment" {
+  role = aws_iam_role.read_request_lambda_role.id
+  policy_arn = aws_iam_policy.read_request_lambda_policy.arn
+}
+
+### Backend S3
+resource "aws_s3_bucket" "ugt_lambda_states" {
+  bucket = "ugt-lambda-states"
+
+  force_destroy = true
+}
+
+### Backend SQS
+
+resource "aws_sqs_queue" "requests-queue" {
+  name = join("-", [var.env_name, var.region, "sqs-requests-queue"])
+  delay_seconds = 90
+  max_message_size = 2048
+  message_retention_seconds = 86400
+  receive_wait_time_seconds = 10
 }
