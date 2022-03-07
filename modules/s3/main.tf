@@ -356,11 +356,6 @@ resource "aws_dynamodb_table" "requests" {
     name = "id"
     type = "S"
   }
-
-  ttl {
-    attribute_name = "TimeToExist"
-    enabled        = false
-  }
 }
 
 ### Backend IAM
