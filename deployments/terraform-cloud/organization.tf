@@ -1,5 +1,5 @@
 resource "tfe_organization" "ugt" {
-  name                     = "ugt"
+  name                     = "UGT"
   email                    = "rcoliveirag@gmail.com"
   collaborator_auth_policy = "password"
 }
