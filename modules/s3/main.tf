@@ -504,7 +504,6 @@ resource "aws_s3_bucket" "ugt_lambda_states" {
 
 resource "aws_sqs_queue" "requests-queue" {
   name                      = join("-", [var.env_name, var.region, "sqs-requests-queue"])
-  delay_seconds             = 90
   max_message_size          = 2048
   message_retention_seconds = 86400
   receive_wait_time_seconds = 10
