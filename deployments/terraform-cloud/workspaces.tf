@@ -1,7 +1,7 @@
 module "s3" {
   source = "../../modules/tf-cloud"
 
-  workspace_name          = "s3"
+  workspace_name          = "s3-production"
   vcs_repo_oauth_token_id = tfe_oauth_client.github.oauth_token_id
 
   directory = "deployments/s3"
