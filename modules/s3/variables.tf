@@ -11,6 +11,7 @@ variable "env_name" {
 variable "prod" {
   description = "Defines if this is a production deployment"
   type = bool
+  default = true
 }
 
 variable "domain_name" {
