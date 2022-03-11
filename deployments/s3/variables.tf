@@ -8,9 +8,10 @@ variable "env_name" {
   type = string
 }
 
-variable "prod" {
+variable "is_production_env" {
   description = "Defines if this is a production deployment"
   type = bool
+  default = true
 }
 
 variable "domain_name" {
