@@ -8,6 +8,11 @@ variable "env_name" {
   type = string
 }
 
+variable "prod" {
+  description = "Defines if this is a production deployment"
+  type = bool
+}
+
 variable "domain_name" {
   description = "Root Domain name"
   type = string

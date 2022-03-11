@@ -130,7 +130,7 @@ resource "aws_apigatewayv2_api" "ugt_gw" {
   name          = join("-", [var.env_name, var.region, "api-gateway"])
   protocol_type = "HTTP"
   cors_configuration {
-    allow_origins = [join("", ["https://", local.fe_domain_name])]
+    allow_origins = [var.prod ? join("", ["https://", local.fe_domain_name]) : "*"]
     allow_methods = ["POST", "GET"]
     max_age       = 300
   }
