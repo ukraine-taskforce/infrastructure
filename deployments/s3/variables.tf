@@ -1,12 +1,17 @@
 variable "region" {
   description = "Region"
   type = string
-  default = "eu-central-1"
 }
 
 variable "env_name" {
   description = "Environment name"
   type = string
+}
+
+variable "is_production_env" {
+  description = "Defines if this is a production deployment"
+  type = bool
+  default = true
 }
 
 variable "domain_name" {
@@ -46,4 +51,10 @@ variable "lambda_processor_key" {
   description = "S3 Object key for Processor lambda"
   type = string
   default = "processor.zip"
+}
+
+variable "acl" {
+  type        = string
+  default     = "private"
+  description = "S3 bucket ACL"
 }
