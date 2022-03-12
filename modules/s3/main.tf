@@ -368,7 +368,7 @@ resource "aws_lambda_function" "requests_aggregated" {
 
   environment {
     variables = {
-      bucket = aws_s3_bucket.ugt_lambda_states.bucket
+      bucket = aws_s3_bucket.ugt_requests_aggregations.bucket
     }
   }
 }
@@ -549,8 +549,8 @@ resource "aws_iam_policy" "read_request_aggregated_lambda_policy" {
       "Action": "s3:*",
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.ugt_lambda_states.arn}*",
-        "${aws_s3_bucket.ugt_lambda_states.arn}/*"
+        "${aws_s3_bucket.ugt_requests_aggregations.arn}*",
+        "${aws_s3_bucket.ugt_requests_aggregations.arn}/*"
       ]
     }
   ]
