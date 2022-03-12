@@ -44,6 +44,13 @@ resource "aws_iam_policy" "requests_etl_policy" {
             ],
             "Effect": "Allow",
             "Resource": "${aws_dynamodb_table.requests.arn}"
+        },
+        {
+            "Action": [
+                "glue:CreateJob"
+            ],
+            "Effect": "Allow",
+            "Resource": "*"
         }
     ]
 }
