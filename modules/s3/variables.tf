@@ -53,6 +53,12 @@ variable "lambda_processor_key" {
   default = "processor.zip"
 }
 
+variable "lambda_requests_aggregated_key" {
+  description = "S3 Object key for Requests Aggregated lambda"
+  type = string
+  default = "requests-aggregated.zip"
+}
+
 variable "acl" {
   type        = string
   default     = "private"
