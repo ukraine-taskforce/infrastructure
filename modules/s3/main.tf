@@ -546,10 +546,10 @@ resource "aws_iam_policy" "read_request_aggregated_lambda_policy" {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Action": "s3:*",
+      "Action": ["s3:Get*", "s3:List*"],
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.ugt_requests_aggregations.arn}*",
+        "${aws_s3_bucket.ugt_requests_aggregations.arn}",
         "${aws_s3_bucket.ugt_requests_aggregations.arn}/*"
       ]
     }
