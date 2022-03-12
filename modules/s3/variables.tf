@@ -8,6 +8,12 @@ variable "env_name" {
   type = string
 }
 
+variable "is_production_env" {
+  description = "Defines if this is a production deployment"
+  type = bool
+  default = true
+}
+
 variable "domain_name" {
   description = "Root Domain name"
   type = string
@@ -45,6 +51,12 @@ variable "lambda_processor_key" {
   description = "S3 Object key for Processor lambda"
   type = string
   default = "processor.zip"
+}
+
+variable "lambda_requests_aggregated_key" {
+  description = "S3 Object key for Requests Aggregated lambda"
+  type = string
+  default = "requests-aggregated.zip"
 }
 
 variable "acl" {
