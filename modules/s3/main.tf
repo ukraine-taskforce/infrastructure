@@ -243,6 +243,15 @@ resource "aws_apigatewayv2_route" "post_request" {
 }
 
 ### Requests Aggregated API
+resource "aws_lambda_permission" "get_requests_aggregated" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.requests_aggregated.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_apigatewayv2_api.ugt_gw.execution_arn}/*/*"
+}
+
 resource "aws_apigatewayv2_integration" "get_requests_aggregated" {
   api_id = aws_apigatewayv2_api.ugt_gw.id
 
