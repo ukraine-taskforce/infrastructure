@@ -64,3 +64,8 @@ variable "acl" {
   default     = "private"
   description = "S3 bucket ACL"
 }
+
+variable "github_oidc_trusted_repos" {
+  type        = list(string)
+  description = "Repos in which workflows are allowed to retrieve temp. credentials from AWS"
+}
