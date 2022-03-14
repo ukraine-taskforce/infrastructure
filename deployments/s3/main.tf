@@ -7,5 +7,5 @@ module "s3" {
   domain_name = var.domain_name
   api_subdomain = var.api_subdomain
   fe_subdomain = var.fe_subdomain
+  github_oidc_trusted_repos = var.github_oidc_trusted_repos
 }
-
