@@ -1,5 +1,5 @@
-module "s3" {
-  source = "../../modules/s3"
+module "s5" {
+  source = "../../modules/s5"
 
   region = var.region
   env_name = var.env_name
