@@ -137,3 +137,9 @@ resource "aws_cognito_user_pool" "users" {
     allow_admin_create_user_only = true
   }
 }
+
+resource "aws_cognito_user_pool_client" "cognito-client" {
+  name = join("-", [var.env_name, var.region, "cognito-client"])
+
+  user_pool_id = aws_cognito_user_pool.users.id
+}
