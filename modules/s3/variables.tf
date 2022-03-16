@@ -53,8 +53,19 @@ variable "lambda_processor_key" {
   default = "processor.zip"
 }
 
+variable "lambda_requests_aggregated_key" {
+  description = "S3 Object key for Requests Aggregated lambda"
+  type = string
+  default = "requests-aggregated.zip"
+}
+
 variable "acl" {
   type        = string
   default     = "private"
   description = "S3 bucket ACL"
+}
+
+variable "github_oidc_trusted_repos" {
+  type        = list(string)
+  description = "Repos in which workflows are allowed to retrieve temp. credentials from AWS"
 }

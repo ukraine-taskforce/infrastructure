@@ -167,7 +167,7 @@ resource "aws_cloudwatch_log_group" "ugt_api_gw" {
   retention_in_days = 30
 }
 
-//Locations API
+### Locations API
 resource "aws_lambda_permission" "locations" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
@@ -192,7 +192,7 @@ resource "aws_apigatewayv2_route" "get_locations" {
   target    = "integrations/${aws_apigatewayv2_integration.get_locations.id}"
 }
 
-//Supplies API
+### Supplies API
 resource "aws_lambda_permission" "supplies" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
@@ -217,7 +217,7 @@ resource "aws_apigatewayv2_route" "get_supplies" {
   target    = "integrations/${aws_apigatewayv2_integration.get_supplies.id}"
 }
 
-//Requests API
+### Requests API
 resource "aws_lambda_permission" "requests" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
@@ -242,8 +242,33 @@ resource "aws_apigatewayv2_route" "post_request" {
   target    = "integrations/${aws_apigatewayv2_integration.post_request.id}"
 }
 
+### Requests Aggregated API
+resource "aws_lambda_permission" "get_requests_aggregated" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.requests_aggregated.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_apigatewayv2_api.ugt_gw.execution_arn}/*/*"
+}
+
+resource "aws_apigatewayv2_integration" "get_requests_aggregated" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  integration_uri    = aws_lambda_function.requests_aggregated.invoke_arn
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+}
+
+resource "aws_apigatewayv2_route" "get_requests_aggregated" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  route_key = "GET /api/v1/requests/aggregated"
+  target    = "integrations/${aws_apigatewayv2_integration.get_requests_aggregated.id}"
+}
+
 ### Backend Lambda
-//Locations API
+### Locations API
 resource "aws_lambda_function" "locations" {
   function_name = "GetLocations"
 
@@ -262,7 +287,7 @@ resource "aws_cloudwatch_log_group" "locations" {
   retention_in_days = 30
 }
 
-//Supplies API
+### Supplies API
 resource "aws_lambda_function" "supplies" {
   function_name = "GetSupplies"
 
@@ -281,7 +306,7 @@ resource "aws_cloudwatch_log_group" "supplies" {
   retention_in_days = 30
 }
 
-//Requests API
+### Requests API
 resource "aws_lambda_function" "requests" {
   function_name = "PostRequest"
 
@@ -308,7 +333,7 @@ resource "aws_cloudwatch_log_group" "requests" {
   retention_in_days = 30
 }
 
-//SQS listener
+### SQS listener
 resource "aws_lambda_function" "processor" {
   function_name = "SaveRequest"
 
@@ -335,6 +360,34 @@ resource "aws_cloudwatch_log_group" "listener" {
 
   retention_in_days = 30
 }
+
+### Requests Aggregated API
+resource "aws_lambda_function" "requests_aggregated" {
+  function_name = "GetRequestsAggregated"
+
+  s3_bucket = aws_s3_bucket.ugt_lambda_states.id
+  s3_key    = var.lambda_requests_aggregated_key
+
+  runtime = "nodejs12.x"
+  handler = "requests-aggregated.handler"
+
+  role = aws_iam_role.read_request_aggregated_lambda_role.arn
+
+  timeout = 30
+
+  environment {
+    variables = {
+      bucket = aws_s3_bucket.ugt_requests_aggregations.bucket
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "requests_aggregated" {
+  name = "/aws/lambda/${aws_lambda_function.requests_aggregated.function_name}"
+
+  retention_in_days = 30
+}
+
 
 # Event source from SQS
 resource "aws_lambda_event_source_mapping" "event_source_mapping" {
@@ -491,6 +544,50 @@ EOF
 resource "aws_iam_role_policy_attachment" "read_request_lambda_policy_attachment" {
   role       = aws_iam_role.read_request_lambda_role.id
   policy_arn = aws_iam_policy.read_request_lambda_policy.arn
+}
+
+resource "aws_iam_policy" "read_request_aggregated_lambda_policy" {
+  name        = "read_request_aggregated_lambda_policy"
+  description = "read_request_aggregated_lambda_policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": ["s3:Get*", "s3:List*"],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_s3_bucket.ugt_requests_aggregations.arn}",
+        "${aws_s3_bucket.ugt_requests_aggregations.arn}/*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "read_request_aggregated_lambda_role" {
+  name = "read_request_aggregated_lambda_role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "read_request_aggregated_lambda_role" {
+  role = aws_iam_role.read_request_aggregated_lambda_role.id
+  policy_arn = aws_iam_policy.read_request_aggregated_lambda_policy.arn
 }
 
 ### Backend S3

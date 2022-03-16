@@ -2,6 +2,10 @@ provider "aws" {
   region = var.region
 }
 
+locals {
+  fe_domain_name = join(".", [var.fe_subdomain, var.domain_name])
+}
+
 ### VPC
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
@@ -24,7 +28,7 @@ module "vpc" {
 module "acm" {
   source = "terraform-aws-modules/acm/aws"
 
-  domain_name = var.domain_name
+  domain_name = local.fe_domain_name
   zone_id     = data.cloudflare_zone.this.id
 
   create_route53_records  = false
@@ -52,7 +56,7 @@ data "cloudflare_zone" "this" {
 module "frontend" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
-  bucket        = var.domain_name
+  bucket        = local.fe_domain_name
   acl           = "private"
   attach_policy = true
   policy        = <<POLICY
@@ -64,7 +68,7 @@ module "frontend" {
             "Effect": "Allow",
             "Principal": "*",
             "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::${var.domain_name}/*",
+            "Resource": "arn:aws:s3:::${local.fe_domain_name}/*",
             "Condition": {
                 "IpAddress": {
                     "aws:SourceIp": [
@@ -106,7 +110,7 @@ POLICY
 
 resource "cloudflare_record" "frontend" {
   zone_id = data.cloudflare_zone.this.id
-  name    = var.domain_name
+  name    = var.fe_subdomain
   type    = "CNAME"
   value   = module.frontend.s3_bucket_website_endpoint
   ttl     = 1
