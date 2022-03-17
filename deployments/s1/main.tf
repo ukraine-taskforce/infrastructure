@@ -1,9 +1,9 @@
-module "s5" {
-  source = "../../modules/s5"
+module "s1" {
+  source = "../../modules/s1"
 
   region = var.region
   env_name = var.env_name
   domain_name = var.domain_name
-  fe_subdomain = var.fe_subdomain
+  api_subdomain = var.api_subdomain
 }
 

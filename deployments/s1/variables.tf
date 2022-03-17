@@ -9,12 +9,6 @@ variable "env_name" {
   type = string
 }
 
-variable "is_production_env" {
-  description = "Defines if this is a production deployment"
-  type = bool
-  default = true
-}
-
 variable "domain_name" {
   description = "Root Domain name"
   type = string
@@ -22,11 +16,6 @@ variable "domain_name" {
 
 variable "api_subdomain" {
   description = "API Subdomain"
-  type = string
-}
-
-variable "fe_subdomain" {
-  description = "Frontend Subdomain"
   type = string
 }
 
@@ -52,16 +41,4 @@ variable "lambda_processor_key" {
   description = "S3 Object key for Processor lambda"
   type = string
   default = "processor.zip"
-}
-
-variable "acl" {
-  type        = string
-  default     = "private"
-  description = "S3 bucket ACL"
-}
-
-variable "github_oidc_trusted_repos" {
-  type        = list(string)
-  default     = []
-  description = "Repos in which workflows are allowed to retrieve temp. credentials from AWS"
 }
