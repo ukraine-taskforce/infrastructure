@@ -653,18 +653,16 @@ resource "aws_cognito_user_pool" "users" {
 
   admin_create_user_config {
     allow_admin_create_user_only = true
-  }
 
-  email_configuration {
-    from_email_address = "noreply@ugft.app"
-  }
-
-  admin_create_user_config {
     invite_message_template {
       email_message = "You were invited to Ukraine Global Taskforce maps application.\n\nYour username is {username} and password is {####}."
       email_subject = "Your Ukraine Global Taskforce password"
       sms_message   = "Your Ukraine Global Taskforce username is {username} and password is {####}."
     }
+  }
+
+  email_configuration {
+    from_email_address = "noreply@ugft.app"
   }
 }
 
