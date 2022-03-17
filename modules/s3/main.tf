@@ -654,12 +654,6 @@ resource "aws_cognito_user_pool" "users" {
   admin_create_user_config {
     allow_admin_create_user_only = true
   }
-}
-
-resource "aws_cognito_user_pool_client" "cognito_client" {
-  name = join("-", [var.env_name, var.region, "cognito-client"])
-
-  user_pool_id = aws_cognito_user_pool.users.id
 
   email_configuration {
     from_email_address = "noreply@ugft.app"
@@ -670,4 +664,10 @@ resource "aws_cognito_user_pool_client" "cognito_client" {
     email_subject = "Your Ukraine Global Taskforce password"
     sms_message   = "Your Ukraine Global Taskforce username is {username} and password is {####}."
   }
+}
+
+resource "aws_cognito_user_pool_client" "cognito_client" {
+  name = join("-", [var.env_name, var.region, "cognito-client"])
+
+  user_pool_id = aws_cognito_user_pool.users.id
 }
