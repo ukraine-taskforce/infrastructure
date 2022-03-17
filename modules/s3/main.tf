@@ -662,7 +662,7 @@ resource "aws_cognito_user_pool" "users" {
   }
 
   email_configuration {
-    from_email_address = "noreply@ugft.app"
+    from_email_address = "noreply@ugtf.app"
   }
 }
 
