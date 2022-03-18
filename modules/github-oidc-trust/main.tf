@@ -24,16 +24,12 @@ data "aws_iam_policy_document" "this" {
       variable = "token.actions.githubusercontent.com:aud"
       values   = ["sts.amazonaws.com"]
     }
-    dynamic "condition" {
-      for_each = var.trusted_repos
-      content {
-        test     = "StringLike"
-        variable = "token.actions.githubusercontent.com:sub"
-        values = [
-          "repo:${var.github_org}/${condition.value}:ref:refs/heads/main",
-          "repo:${var.github_org}/${condition.value}:pull_request"
-        ]
-      }
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      # This is crucial, without this condition any action (even outside of our org)
+      # can assume any IAM role with such a trust policy
+      values = [for repo in var.trusted_repos: "repo:${var.github_org}/${repo}:*"]
     }
   }
 }

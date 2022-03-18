@@ -34,8 +34,8 @@ data "aws_iam_policy_document" "deploy_permissions" {
 
     effect = "Allow"
     actions = [
-      # TODO not sure if this permission is sufficient
-      "lambda:UpdateFunctionCode"
+      "lambda:UpdateFunctionCode",
+      "lambda:GetFunctionConfiguration"
     ]
     resources = [
       aws_lambda_function.locations.arn,
