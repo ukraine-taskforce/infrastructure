@@ -118,28 +118,3 @@ resource "cloudflare_record" "frontend" {
 
   allow_overwrite = true
 }
-
-### Authentication
-resource "aws_cognito_user_pool" "users" {
-  name = join("-", [var.env_name, var.region, "pool"])
-
-  
-  mfa_configuration = "OFF"
-
-  account_recovery_setting {
-    recovery_mechanism {
-      name     = "verified_email"
-      priority = 1
-    }
-  }
-
-  admin_create_user_config {
-    allow_admin_create_user_only = true
-  }
-}
-
-resource "aws_cognito_user_pool_client" "cognito-client" {
-  name = join("-", [var.env_name, var.region, "cognito-client"])
-
-  user_pool_id = aws_cognito_user_pool.users.id
-}
