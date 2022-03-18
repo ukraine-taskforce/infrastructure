@@ -132,6 +132,7 @@ resource "aws_apigatewayv2_api" "ugt_gw" {
   cors_configuration {
     allow_origins = [var.is_production_env ? join("", ["https://", local.fe_domain_name]) : "*"]
     allow_methods = ["POST", "GET"]
+    allow_headers = ["Authorization", "Content-Type"]
     max_age       = 300
   }
 }
