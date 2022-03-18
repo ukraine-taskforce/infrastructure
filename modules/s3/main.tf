@@ -130,8 +130,9 @@ resource "aws_apigatewayv2_api" "ugt_gw" {
   name          = join("-", [var.env_name, var.region, "api-gateway"])
   protocol_type = "HTTP"
   cors_configuration {
-    allow_origins = [var.is_production_env ? join("", ["https://", local.fe_domain_name]) : "*"]
+    allow_origins = var.is_production_env ? concat(["https://${local.fe_domain_name}"], var.cors_allow_origins) : ["*"]
     allow_methods = ["POST", "GET"]
+    allow_headers = ["Authorization", "Content-Type"]
     max_age       = 300
   }
 }
@@ -368,7 +369,7 @@ resource "aws_lambda_function" "requests_aggregated" {
   s3_bucket = aws_s3_bucket.ugt_lambda_states.id
   s3_key    = var.lambda_requests_aggregated_key
 
-  runtime = "nodejs12.x"
+  runtime = "nodejs14.x"
   handler = "requests-aggregated.handler"
 
   role = aws_iam_role.read_request_aggregated_lambda_role.arn
@@ -377,7 +378,9 @@ resource "aws_lambda_function" "requests_aggregated" {
 
   environment {
     variables = {
-      bucket = aws_s3_bucket.ugt_requests_aggregations.bucket
+      bucket   = aws_s3_bucket.ugt_requests_aggregations.bucket
+      poolId   = aws_cognito_user_pool.users.id
+      clientId = aws_cognito_user_pool_client.cognito_client.id
     }
   }
 }
@@ -633,4 +636,35 @@ resource "aws_apigatewayv2_api_mapping" "live" {
   domain_name     = aws_apigatewayv2_domain_name.backend.id
   stage           = aws_apigatewayv2_stage.ugt_gw_stage.id
   api_mapping_key = aws_apigatewayv2_stage.ugt_gw_stage.name
+}
+
+### Authentication
+resource "aws_cognito_user_pool" "users" {
+  name = join("-", [var.env_name, var.region, "pool"])
+
+  
+  mfa_configuration = "OFF"
+
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+  }
+
+  admin_create_user_config {
+    allow_admin_create_user_only = true
+
+    invite_message_template {
+      email_message = "You were invited to Ukraine Global Taskforce maps application.\n\nYour username is {username} and password is {####}."
+      email_subject = "Your Ukraine Global Taskforce password"
+      sms_message   = "Your Ukraine Global Taskforce username is {username} and password is {####}."
+    }
+  }
+}
+
+resource "aws_cognito_user_pool_client" "cognito_client" {
+  name = join("-", [var.env_name, var.region, "cognito-client"])
+
+  user_pool_id = aws_cognito_user_pool.users.id
 }
