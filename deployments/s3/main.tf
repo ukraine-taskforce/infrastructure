@@ -8,4 +8,5 @@ module "s3" {
   api_subdomain = var.api_subdomain
   fe_subdomain = var.fe_subdomain
   github_oidc_trusted_repos = var.github_oidc_trusted_repos
+  cors_allow_origins = var.cors_allow_origins
 }
