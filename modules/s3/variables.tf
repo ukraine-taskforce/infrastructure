@@ -29,6 +29,12 @@ variable "fe_subdomain" {
   type = string
 }
 
+variable "cors_allow_origins" {
+  description = "Other origins that are allowed to hit the s3 API, format: `http(s)://foo.bar`"
+  type        = list(string)
+  default     = []
+}
+
 variable "lambda_locations_key" {
   description = "S3 Object key for Locations lambda"
   type = string
