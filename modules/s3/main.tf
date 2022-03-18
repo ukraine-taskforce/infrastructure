@@ -369,7 +369,7 @@ resource "aws_lambda_function" "requests_aggregated" {
   s3_bucket = aws_s3_bucket.ugt_lambda_states.id
   s3_key    = var.lambda_requests_aggregated_key
 
-  runtime = "nodejs12.x"
+  runtime = "nodejs14.x"
   handler = "requests-aggregated.handler"
 
   role = aws_iam_role.read_request_aggregated_lambda_role.arn
