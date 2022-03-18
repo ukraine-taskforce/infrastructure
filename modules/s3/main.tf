@@ -660,10 +660,6 @@ resource "aws_cognito_user_pool" "users" {
       sms_message   = "Your Ukraine Global Taskforce username is {username} and password is {####}."
     }
   }
-
-  email_configuration {
-    from_email_address = "noreply@ugft.app"
-  }
 }
 
 resource "aws_cognito_user_pool_client" "cognito_client" {
