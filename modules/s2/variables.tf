@@ -13,6 +13,11 @@ variable "domain_name" {
   type        = string
 }
 
+variable "api_subdomain" {
+  description = "API Subdomain"
+  type        = string
+}
+
 variable "fe_subdomain" {
   description = "Frontend Subdomain"
   type        = string
