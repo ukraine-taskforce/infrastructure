@@ -106,11 +106,19 @@ resource "cloudflare_record" "frontend" {
   allow_overwrite = true
 }
 
+### Backend S3
+resource "aws_s3_bucket" "ugt_lambda_states" {
+  bucket = join("-", [var.env_name, var.region, "lambda-states"])
+
+  force_destroy = true
+}
+
 ### API
 resource "aws_lambda_function" "send_sms" {
   function_name = "SendSms"
 
-  filename = "send-sms.zip"
+  s3_bucket = aws_s3_bucket.ugt_lambda_states.id
+  s3_key    = "send-sms.zip"
 
   timeout = 10
   handler = "send-sms.handler"
