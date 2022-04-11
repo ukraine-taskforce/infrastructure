@@ -9,6 +9,12 @@ variable "env_name" {
   type        = string
 }
 
+variable "is_production_env" {
+  description = "Defines if this is a production deployment"
+  type        = bool
+  default     = true
+}
+
 variable "domain_name" {
   description = "Root Domain name"
   type        = string
@@ -16,7 +22,7 @@ variable "domain_name" {
 
 variable "api_subdomain" {
   description = "API Subdomain"
-  type = string
+  type        = string
 }
 
 variable "fe_subdomain" {

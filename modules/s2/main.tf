@@ -3,9 +3,8 @@ provider "aws" {
 }
 
 locals {
-  fe_domain_name    = join(".", [var.fe_subdomain, var.domain_name])
-  api_domain_name   = join(".", [var.api_subdomain, var.domain_name])
-  is_production_env = var.env_name == "prod"
+  fe_domain_name  = join(".", [var.fe_subdomain, var.domain_name])
+  api_domain_name = join(".", [var.api_subdomain, var.domain_name])
 }
 
 ### ACM
@@ -183,7 +182,7 @@ resource "aws_lambda_function_url" "send_sms_url" {
   authorization_type = "NONE"
   cors {
     allow_credentials = false
-    allow_origins     = local.is_production_env ? ["https://${local.fe_domain_name}"] : ["*"]
+    allow_origins     = var.is_production_env ? ["https://${local.fe_domain_name}"] : ["*"]
     allow_methods     = ["POST"]
     allow_headers     = ["Content-Type", "Content-Length", "Accept-Encoding", "Connection", "User-Agent"]
     expose_headers    = ["Content-Type", "Content-Length", "Content-Encoding", "Connection", "Date"]
