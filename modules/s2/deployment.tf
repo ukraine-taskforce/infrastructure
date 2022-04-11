@@ -8,7 +8,7 @@ data "aws_iam_policy_document" "deploy_permissions" {
   statement {
     sid = "AllowS3Sync"
 
-    effect = "Allow"
+    effect  = "Allow"
     actions = [
       "s3:DeleteObject",
       "s3:GetBucketLocation",
@@ -19,15 +19,17 @@ data "aws_iam_policy_document" "deploy_permissions" {
     ]
     resources = [
       module.frontend.s3_bucket_arn,
-      "${module.frontend.s3_bucket_arn}/*"
+      "${module.frontend.s3_bucket_arn}/*",
+      aws_s3_bucket.ugt_lambda_states.arn,
+      "${aws_s3_bucket.ugt_lambda_states.arn}/*"
 
     ]
   }
   statement {
     sid = "AllowLambdaUpdateFunctionCode"
 
-    effect  = "Allow"
-    actions = ["lambda:UpdateFunctionCode"]
+    effect    = "Allow"
+    actions   = ["lambda:UpdateFunctionCode"]
     resources = [
       aws_lambda_function.send_sms.arn
     ]
