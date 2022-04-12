@@ -89,7 +89,7 @@ resource "cloudflare_record" "backend" {
   zone_id = data.cloudflare_zone.this.id
   name    = var.api_subdomain
   type    = "CNAME"
-  value   = trimprefix(aws_lambda_function_url.send_sms_url.function_url, "https://")
+  value   = split("/", aws_lambda_function_url.send_sms_url.function_url)[2]
   ttl     = 1
   proxied = true
 
