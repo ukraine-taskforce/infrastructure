@@ -28,8 +28,11 @@ data "aws_iam_policy_document" "deploy_permissions" {
   statement {
     sid = "AllowLambdaUpdateFunctionCode"
 
-    effect    = "Allow"
-    actions   = ["lambda:UpdateFunctionCode"]
+    effect  = "Allow"
+    actions = [
+      "lambda:UpdateFunctionCode",
+      "lambda:GetFunctionConfiguration"
+    ]
     resources = [
       aws_lambda_function.send_sms.arn
     ]
