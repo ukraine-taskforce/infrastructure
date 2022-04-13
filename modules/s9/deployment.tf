@@ -19,7 +19,9 @@ data "aws_iam_policy_document" "deploy_permissions" {
     ]
     resources = [
       module.frontend.s3_bucket_arn,
-      "${module.frontend.s3_bucket_arn}/*"
+      "${module.frontend.s3_bucket_arn}/*",
+      aws_s3_bucket.ugt_lambda_states.arn,
+      "${aws_s3_bucket.ugt_lambda_states.arn}/*"
 
     ]
   }
