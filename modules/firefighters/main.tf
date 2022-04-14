@@ -4,6 +4,7 @@ provider "aws" {
 
 locals {
   fe_domain_name = join(".", [var.fe_subdomain, var.domain_name])
+  api_domain_name = join(".", [var.api_subdomain, var.domain_name])
 }
 
 ### ACM
