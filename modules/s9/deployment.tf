@@ -8,7 +8,7 @@ data "aws_iam_policy_document" "deploy_permissions" {
   statement {
     sid = "AllowS3Sync"
 
-    effect  = "Allow"
+    effect = "Allow"
     actions = [
       "s3:DeleteObject",
       "s3:GetBucketLocation",
@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "deploy_permissions" {
   statement {
     sid = "AllowLambdaUpdateFunctionCode"
 
-    effect  = "Allow"
+    effect = "Allow"
     actions = [
       "lambda:UpdateFunctionCode",
       "lambda:GetFunctionConfiguration"
@@ -39,7 +39,7 @@ data "aws_iam_policy_document" "deploy_permissions" {
     condition {
       test     = "StringEquals"
       variable = "aws:RequestTag/env_name"
-      values   = [ var.env_name ]
+      values   = [var.env_name]
     }
   }
 }

@@ -2,10 +2,10 @@
 resource "aws_lambda_function" "supply_data" {
 
   function_name = "SupplyData"
-  description = "Converts CSV data and supplies it to DynamoDB"
+  description   = "Converts CSV data and supplies it to DynamoDB"
 
   s3_bucket = aws_s3_bucket.ugt_lambda_states.id
-  s3_key    = var.lambda_supply_data_key
+  s3_key    = "supply_data.zip"
 
   handler = "main.lambda_handler"
   runtime = "python3.9"
@@ -70,9 +70,9 @@ EOF
 
 ### Backend DynamoDB
 resource "aws_dynamodb_table" "sos-info" {
-  name = join("-", [var.env_name, var.region, "sos-info"])
+  name         = join("-", [var.env_name, var.region, "sos-info"])
   billing_mode = "PAY_PER_REQUEST"
-  hash_key = "ID"
+  hash_key     = "ID"
 
   attribute {
     name = "ID"

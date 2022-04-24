@@ -33,9 +33,3 @@ variable "github_oidc_trusted_repos" {
   type        = list(string)
   description = "Repos in which workflows are allowed to retrieve temp. credentials from AWS"
 }
-
-variable "lambda_supply_data_key" {
-  description = "S3 Object Key for SupplyData Lambda"
-  type = string
-  default = "supply_data.zip"
-}
