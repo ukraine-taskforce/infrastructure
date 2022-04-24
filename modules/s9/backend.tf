@@ -40,8 +40,8 @@ resource "aws_iam_role_policy_attachment" "supply_data_lambda_policy_attachment"
 }
 
 resource "aws_iam_policy" "supply_data_lambda_policy" {
-  name        = "read_request_lambda_policy"
-  description = "read_request_lambda_policy"
+  name        = "supply_data_lambda_policy"
+  description = "supply_data_lambda_policy"
 
   policy = <<EOF
 {
