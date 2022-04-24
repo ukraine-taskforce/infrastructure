@@ -25,6 +25,23 @@ data "aws_iam_policy_document" "deploy_permissions" {
 
     ]
   }
+  statement {
+    sid = "AllowLambdaUpdateFunctionCode"
+
+    effect  = "Allow"
+    actions = [
+      "lambda:UpdateFunctionCode",
+      "lambda:GetFunctionConfiguration"
+    ]
+    resources = [
+      "*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/env_name"
+      values   = [ var.env_name ]
+    }
+  }
 }
 
 resource "aws_iam_policy" "deploy" {
