@@ -120,7 +120,7 @@ resource "cloudflare_ruleset" "transform_uri_rule_path" {
       }
     }
 
-    expression = "(http.host eq \"${local.fe_domain_name}\" and http.request.uri.path eq \"/ua\")"
+    expression = "(http.host eq \"${local.fe_domain_name}\" and (http.request.uri.path eq \"/ua\" or http.request.uri.path eq \"/hu\" or http.request.uri.path eq \"/pl\" or http.request.uri.path eq \"/ro\" or http.request.uri.path eq \"/md\") )"
     description = "known non-root paths"
     enabled = true
   }
