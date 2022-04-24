@@ -102,6 +102,30 @@ resource "cloudflare_record" "frontend" {
   allow_overwrite = true
 }
 
+# Rewrite known non-root paths to root index
+resource "cloudflare_ruleset" "transform_uri_rule_path" {
+  zone_id     = data.cloudflare_zone.this.id
+  name        = "${local.fe_domain_name} root index"
+  description = "redirect non-root paths to root index"
+  kind        = "zone"
+  phase       = "http_request_transform"
+
+  rules {
+    action = "rewrite"
+    action_parameters {
+      uri {
+        path {
+          value = "/"
+        }
+      }
+    }
+
+    expression = "(http.host eq \"${local.fe_domain_name}\" and (http.request.uri.path eq \"/ua\" or http.request.uri.path eq \"/hu\" or http.request.uri.path eq \"/pl\" or http.request.uri.path eq \"/ro\" or http.request.uri.path eq \"/md\") )"
+    description = "${local.fe_domain_name} root index"
+    enabled = true
+  }
+}
+
 ### Backend S3
 resource "aws_s3_bucket" "ugt_lambda_states" {
   bucket = join("-", [var.env_name, var.region, "lambda-states"])
