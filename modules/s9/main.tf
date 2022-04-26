@@ -97,6 +97,7 @@ POLICY
   }
 }
 
+
 resource "cloudflare_record" "frontend" {
   zone_id = data.cloudflare_zone.this.id
   name    = var.fe_subdomain
