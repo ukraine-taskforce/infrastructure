@@ -1,5 +1,11 @@
 provider "aws" {
   region = var.region
+
+  default_tags {
+    tags = {
+      env_name = var.env_name
+    }
+  }
 }
 
 locals {
@@ -120,9 +126,9 @@ resource "cloudflare_ruleset" "transform_uri_rule_path" {
       }
     }
 
-    expression = "(http.host eq \"${local.fe_domain_name}\" and (http.request.uri.path eq \"/ua\" or http.request.uri.path eq \"/hu\" or http.request.uri.path eq \"/pl\" or http.request.uri.path eq \"/ro\" or http.request.uri.path eq \"/md\") )"
+    expression  = "(http.host eq \"${local.fe_domain_name}\" and (http.request.uri.path eq \"/ua\" or http.request.uri.path eq \"/hu\" or http.request.uri.path eq \"/pl\" or http.request.uri.path eq \"/ro\" or http.request.uri.path eq \"/md\") )"
     description = "${local.fe_domain_name} root index"
-    enabled = true
+    enabled     = true
   }
 }
 
