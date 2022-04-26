@@ -68,6 +68,28 @@ resource "aws_iam_policy" "supply_data_lambda_policy" {
 EOF
 }
 
+### S3 Trigger
+resource "aws_lambda_permission" "allow_bucket_supply_data" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.supply_data.arn
+  principal     = "s3.amazonaws.com"
+  source_arn    = module.frontend.s3_bucket_arn
+}
+
+resource "aws_s3_bucket_notification" "supply_data_notification" {
+  bucket = module.frontend.s3_bucket_id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.supply_data.arn
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = "/assets/dataset"
+    filter_suffix       = ".csv"
+  }
+
+  depends_on = [aws_lambda_permission.allow_bucket_supply_data]
+}
+
 ### Backend DynamoDB
 resource "aws_dynamodb_table" "sos-info" {
   name         = join("-", [var.env_name, var.region, "sos-info"])
