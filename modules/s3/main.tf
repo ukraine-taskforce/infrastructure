@@ -237,7 +237,7 @@ resource "aws_apigatewayv2_integration" "post_request" {
 resource "aws_apigatewayv2_route" "post_request" {
   api_id = aws_apigatewayv2_api.ugt_gw.id
 
-  route_key = "POST /api/v1/requests"
+  route_key = "POST /api/{version}/requests"
   target    = "integrations/${aws_apigatewayv2_integration.post_request.id}"
 }
 
@@ -350,6 +350,7 @@ resource "aws_lambda_function" "processor" {
     variables = {
       sqs_url    = aws_sqs_queue.requests-queue.url
       table_name = aws_dynamodb_table.requests.name
+      v2_table_name = aws_dynamodb_table.requests_v2.name
     }
   }
 }
@@ -401,6 +402,17 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 ### Backend DyamoDB
 resource "aws_dynamodb_table" "requests" {
   name         = join("-", [var.env_name, var.region, "dynamodb-requests"])
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table" "requests_v2" {
+  name         = join("-", [var.env_name, var.region, "dynamodb-requests-v2"])
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "id"
 
