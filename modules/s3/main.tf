@@ -187,7 +187,7 @@ resource "aws_apigatewayv2_integration" "get_locations" {
 resource "aws_apigatewayv2_route" "get_locations" {
   api_id = aws_apigatewayv2_api.ugt_gw.id
 
-  route_key = "GET /api/v1/requests/locations"
+  route_key = "GET /api/{version}/requests/locations"
   target    = "integrations/${aws_apigatewayv2_integration.get_locations.id}"
 }
 
@@ -212,7 +212,7 @@ resource "aws_apigatewayv2_integration" "get_supplies" {
 resource "aws_apigatewayv2_route" "get_supplies" {
   api_id = aws_apigatewayv2_api.ugt_gw.id
 
-  route_key = "GET /api/v1/requests/supplies"
+  route_key = "GET /api/{version}/requests/supplies"
   target    = "integrations/${aws_apigatewayv2_integration.get_supplies.id}"
 }
 
@@ -262,7 +262,7 @@ resource "aws_apigatewayv2_integration" "get_requests_aggregated" {
 resource "aws_apigatewayv2_route" "get_requests_aggregated" {
   api_id = aws_apigatewayv2_api.ugt_gw.id
 
-  route_key = "GET /api/v1/requests/aggregated"
+  route_key = "GET /api/{version}/requests/aggregated"
   target    = "integrations/${aws_apigatewayv2_integration.get_requests_aggregated.id}"
 }
 
