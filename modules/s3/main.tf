@@ -216,7 +216,7 @@ resource "aws_apigatewayv2_route" "get_supplies" {
   target    = "integrations/${aws_apigatewayv2_integration.get_supplies.id}"
 }
 
-### Requests API
+### Requests API - Post request
 resource "aws_lambda_permission" "requests" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
@@ -239,6 +239,39 @@ resource "aws_apigatewayv2_route" "post_request" {
 
   route_key = "POST /api/{version}/requests"
   target    = "integrations/${aws_apigatewayv2_integration.post_request.id}"
+}
+
+### Requests API - Update request
+resource "aws_apigatewayv2_route" "update_request" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  route_key = "PUT /api/{version}/requests/{id}"
+  target    = "integrations/${aws_apigatewayv2_integration.post_request.id}"
+}
+
+### Requests API - List requests
+resource "aws_lambda_permission" "list_requests" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.list_requests.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_apigatewayv2_api.ugt_gw.execution_arn}/*/*"
+}
+
+resource "aws_apigatewayv2_integration" "list_requests" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  integration_uri    = aws_lambda_function.list_requests.invoke_arn
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+}
+
+resource "aws_apigatewayv2_route" "list_requests" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  route_key = "GET /api/{version}/requests"
+  target    = "integrations/${aws_apigatewayv2_integration.list_requests.id}"
 }
 
 ### Requests Aggregated API
@@ -331,6 +364,45 @@ resource "aws_cloudwatch_log_group" "requests" {
 
   retention_in_days = 30
 }
+
+### Requests API - List requests
+# deploy a dummy lambda, otherwise the deployment fails because no such object exists
+module "list_requests_dummy" {
+  source    = "../features/dummy-lambda-bundle"
+  s3_bucket = aws_s3_bucket.ugt_lambda_states.id
+  s3_key    = var.lambda_requests_list_key
+  filename  = "requests-list.js"
+}
+
+resource "aws_lambda_function" "list_requests" {
+  function_name = "ListRequests"
+
+  s3_bucket = aws_s3_bucket.ugt_lambda_states.id
+  s3_key    = var.lambda_requests_list_key
+
+  runtime = "nodejs12.x"
+  handler = "requests-list.handler"
+
+  role = aws_iam_role.list_requests_lambda_role.arn
+
+  timeout = 30
+
+  environment {
+    variables = {
+      table_name = aws_dynamodb_table.requests.name
+      v2_table_name = aws_dynamodb_table.requests_v2.name
+    }
+  }
+
+  depends_on = [module.list_requests_dummy]
+}
+
+resource "aws_cloudwatch_log_group" "list_requests" {
+  name = "/aws/lambda/${aws_lambda_function.list_requests.function_name}"
+
+  retention_in_days = 30
+}
+
 
 ### SQS listener
 resource "aws_lambda_function" "processor" {
@@ -498,6 +570,69 @@ resource "aws_iam_role_policy_attachment" "requests_lambda_policy_attachment" {
   policy_arn = aws_iam_policy.post_request_lambda_policy.arn
 }
 
+resource "aws_iam_policy" "list_requests_lambda_policy" {
+  name        = "list_requests_lambda_policy"
+  description = "list_requests_lambda_policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+        "Action": [
+            "dynamodb:GetItem",
+            "dynamodb:DescribeTable",
+            "dynamodb:Scan"
+        ],
+        "Effect": "Allow",
+        "Resource": "${aws_dynamodb_table.requests.arn}"
+    },
+    {
+        "Action": [
+            "dynamodb:GetItem",
+            "dynamodb:DescribeTable",
+            "dynamodb:Scan"
+        ],
+        "Effect": "Allow",
+        "Resource": "${aws_dynamodb_table.requests_v2.arn}"
+    },
+    {
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "list_requests_lambda_role" {
+  name               = "list_requests_lambda_role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "list_requests_lambda_policy_attachment" {
+  role       = aws_iam_role.list_requests_lambda_role.id
+  policy_arn = aws_iam_policy.list_requests_lambda_policy.arn
+}
+
 resource "aws_iam_policy" "read_request_lambda_policy" {
   name        = "read_request_lambda_policy"
   description = "read_request_lambda_policy"
@@ -521,6 +656,13 @@ resource "aws_iam_policy" "read_request_lambda_policy" {
       ],
       "Effect": "Allow",
       "Resource": "${aws_dynamodb_table.requests.arn}"
+    },
+    {
+      "Action": [
+        "dynamodb:PutItem"
+      ],
+      "Effect": "Allow",
+      "Resource": "${aws_dynamodb_table.requests_v2.arn}"
     },
     {
       "Action": [
@@ -652,7 +794,7 @@ resource "aws_apigatewayv2_api_mapping" "live" {
 resource "aws_cognito_user_pool" "users" {
   name = join("-", [var.env_name, var.region, "pool"])
 
-  
+
   mfa_configuration = "OFF"
 
   account_recovery_setting {
