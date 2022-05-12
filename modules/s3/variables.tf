@@ -53,6 +53,12 @@ variable "lambda_requests_key" {
   default = "requests.zip"
 }
 
+variable "lambda_requests_list_key" {
+  description = "S3 Object key for Requests lambda"
+  type = string
+  default = "requests-list.zip"
+}
+
 variable "lambda_processor_key" {
   description = "S3 Object key for Processor lambda"
   type = string
