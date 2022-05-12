@@ -390,7 +390,7 @@ resource "aws_lambda_function" "list_requests" {
   environment {
     variables = {
       table_name = aws_dynamodb_table.requests.name
-      v2_table_name = aws_dynamodb_table.requests_v2.name
+      table_name_v2 = aws_dynamodb_table.requests_v2.name
     }
   }
 
