@@ -366,6 +366,14 @@ resource "aws_cloudwatch_log_group" "requests" {
 }
 
 ### Requests API - List requests
+# deploy a dummy lambda, otherwise the deployment fails because no such object exists
+module "list_requests_dummy" {
+  source    = "../features/dummy-lambda-bundle"
+  s3_bucket = aws_s3_bucket.ugt_lambda_states.id
+  s3_key    = var.lambda_requests_list_key
+  filename  = "requests-list.js"
+}
+
 resource "aws_lambda_function" "list_requests" {
   function_name = "ListRequests"
 
@@ -385,6 +393,8 @@ resource "aws_lambda_function" "list_requests" {
       v2_table_name = aws_dynamodb_table.requests_v2.name
     }
   }
+
+  depends_on = [module.list_requests_dummy]
 }
 
 resource "aws_cloudwatch_log_group" "list_requests" {
