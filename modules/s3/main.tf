@@ -652,14 +652,16 @@ resource "aws_iam_policy" "read_request_lambda_policy" {
     },
     {
       "Action": [
-        "dynamodb:PutItem"
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem"
       ],
       "Effect": "Allow",
       "Resource": "${aws_dynamodb_table.requests.arn}"
     },
     {
       "Action": [
-        "dynamodb:PutItem"
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem"
       ],
       "Effect": "Allow",
       "Resource": "${aws_dynamodb_table.requests_v2.arn}"
