@@ -216,6 +216,31 @@ resource "aws_apigatewayv2_route" "get_supplies" {
   target    = "integrations/${aws_apigatewayv2_integration.get_supplies.id}"
 }
 
+### Send SMS API
+resource "aws_lambda_permission" "send_sms" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.send_sms.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_apigatewayv2_api.ugt_gw.execution_arn}/*/*"
+}
+
+resource "aws_apigatewayv2_integration" "send_sms" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  integration_uri    = aws_lambda_function.send_sms.invoke_arn
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+}
+
+resource "aws_apigatewayv2_route" "send_sms" {
+  api_id = aws_apigatewayv2_api.ugt_gw.id
+
+  route_key = "GET /api/{version}/requests/send_sms"
+  target    = "integrations/${aws_apigatewayv2_integration.send_sms.id}"
+}
+
 ### Requests API - Post request
 resource "aws_lambda_permission" "requests" {
   statement_id  = "AllowExecutionFromAPIGateway"
@@ -334,6 +359,25 @@ resource "aws_lambda_function" "supplies" {
 
 resource "aws_cloudwatch_log_group" "supplies" {
   name = "/aws/lambda/${aws_lambda_function.supplies.function_name}"
+
+  retention_in_days = 30
+}
+
+### Send SMS API
+resource "aws_lambda_function" "send_sms" {
+  function_name = "SendSms"
+
+  s3_bucket = aws_s3_bucket.ugt_lambda_states.id
+  s3_key    = var.lambda_send_sms_key
+
+  runtime = "nodejs12.x"
+  handler = "send-sms.handler"
+
+  role = aws_iam_role.send_sms_lambda_role.arn
+}
+
+resource "aws_cloudwatch_log_group" "send_sms" {
+  name = "/aws/lambda/${aws_lambda_function.send_sms.function_name}"
 
   retention_in_days = 30
 }
@@ -515,6 +559,52 @@ resource "aws_iam_role" "requests_lambda_role" {
 resource "aws_iam_role_policy_attachment" "requests_lambda_policy" {
   role       = aws_iam_role.requests_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role" "send_sms_lambda_role" {
+  name               = "send_sms_lambda_role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "send_sms_lambda_policy_attachment" {
+  role       = aws_iam_role.send_sms_lambda_role.id
+  policy_arn = aws_iam_policy.send_sms_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "aws_lambda_basic_execution_role_attachment" {
+  role       = aws_iam_role.send_sms_lambda_role.id
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_policy" "send_sms_policy" {
+  name        = "send_sms_policy"
+  description = "send_sms_policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sns:Publish",
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_iam_policy" "post_request_lambda_policy" {

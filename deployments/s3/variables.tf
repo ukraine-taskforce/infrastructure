@@ -47,6 +47,12 @@ variable "lambda_supplies_key" {
   default = "supplies.zip"
 }
 
+variable "lambda_send_sms_key" {
+  description = "S3 Object key for SendSms lambda"
+  type = string
+  default = "send-sms.zip"
+}
+
 variable "lambda_requests_key" {
   description = "S3 Object key for Requests lambda"
   type = string
