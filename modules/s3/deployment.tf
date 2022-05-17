@@ -42,7 +42,8 @@ data "aws_iam_policy_document" "deploy_permissions" {
       aws_lambda_function.processor.arn,
       aws_lambda_function.requests.arn,
       aws_lambda_function.supplies.arn,
-      aws_lambda_function.requests_aggregated.arn
+      aws_lambda_function.requests_aggregated.arn,
+      aws_lambda_function.send_sms.arn
     ]
   }
 }
