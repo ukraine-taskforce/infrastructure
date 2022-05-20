@@ -380,7 +380,7 @@ resource "aws_lambda_function" "list_requests" {
   s3_bucket = aws_s3_bucket.ugt_lambda_states.id
   s3_key    = var.lambda_requests_list_key
 
-  runtime = "nodejs12.x"
+  runtime = "nodejs14.x"
   handler = "requests-list.handler"
 
   role = aws_iam_role.list_requests_lambda_role.arn
