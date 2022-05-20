@@ -391,6 +391,8 @@ resource "aws_lambda_function" "list_requests" {
     variables = {
       table_name = aws_dynamodb_table.requests.name
       table_name_v2 = aws_dynamodb_table.requests_v2.name
+      poolId = aws_cognito_user_pool.users.id
+      clientId = aws_cognito_user_pool_client.cognito_client.id
     }
   }
 
