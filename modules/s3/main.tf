@@ -345,7 +345,7 @@ resource "aws_lambda_function" "requests" {
   s3_bucket = aws_s3_bucket.ugt_lambda_states.id
   s3_key    = var.lambda_requests_key
 
-  runtime = "nodejs12.x"
+  runtime = "nodejs14.x"
   handler = "requests.handler"
 
   role = aws_iam_role.post_request_lambda_role.arn
@@ -354,7 +354,9 @@ resource "aws_lambda_function" "requests" {
 
   environment {
     variables = {
-      sqs_url = aws_sqs_queue.requests-queue.url
+      sqs_url  = aws_sqs_queue.requests-queue.url
+      poolId   = aws_cognito_user_pool.users.id
+      clientId = aws_cognito_user_pool_client.cognito_client.id 
     }
   }
 }
